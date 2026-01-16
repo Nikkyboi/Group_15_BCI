@@ -1,0 +1,45 @@
+# Applied Signal Processing
+# - Niklas August Kjølbro
+
+# Create enviroment
+Create your environment using one of the following commands:
+- **macOS/Linux**:
+    ```bash
+    python3.11 -m venv src/env
+- **Windows**:
+    ```bash
+    py -3.11 -m venv src/env
+
+# In case error creating environment then possible solution (Windowns only)
+1. Right-click the Start menu and choose Windows PowerShell (Admin).
+2. Run the following command to allow scripts to run:
+    ```bash
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+3. If prompted, type Y and press Enter.
+
+# Commandline to activate the environment:
+Activate your environment using one of the following commands:
+- **macOS/Linux**:
+    ```bash
+    source src/env/bin/activate
+- **Windows**:
+    ```bash
+    .\src\env\Scripts\activate  
+
+# Commandline to download all requirements
+Make sure to activate enviroment
+- **macOS/Linux**:
+    ```bash
+    pip install -r src/requirements.txt
+- **Windows**:
+    ```bash
+    pip install -r .\src\requirements.txt
+
+# Commandline to run program:
+Remember to activate enviroment first!
+- **macOS/Linux**:
+    ```bash
+    python -m src.(folder).(file)
+- **Windows**:
+    ```bash
+    python .\src\Group_work_(nr)\(file)
