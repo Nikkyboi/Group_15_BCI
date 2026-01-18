@@ -135,20 +135,75 @@ def baseline_cross(subjects, n_components = 4, lam = 0.1):
         
 if __name__ == "__main__":
     subjects = [
-        "PAT013_processed", "PAT015_processed", "PAT021_A_processed", "PATID15_processed", "PATID16_processed", "PATID26_processed"
+        "PAT013_processed", "PAT015_processed", "PAT021_A_processed",
+        "PATID15_processed", "PATID16_processed", "PATID26_processed"
     ]
-    within_results = baseline_within(subjects, test_size=0.2, n_components=4, lam=0.1)
-    cross_results = baseline_cross(subjects, n_components=4, lam=0.1)
-    
-    # Save to txt files
+
+    n_components_list = [2, 4, 6, 8]
+    lam_list = [0.01, 0.05, 0.1, 0.2]
+
+    best_within_mean = -1
+    best_cross_mean = -1
+
+    best_within = None
+    best_cross = None
+
+    best_within_params = None
+    best_cross_params = None
+
+    all_results = []  # store summary rows
+
+    for n_comp in n_components_list:
+        for lam in lam_list:
+            print(f"\n=== n_components={n_comp}, lam={lam} ===")
+
+            within_results = baseline_within(subjects, test_size=0.2, n_components=n_comp, lam=lam)
+            cross_results = baseline_cross(subjects, n_components=n_comp, lam=lam)
+
+            within_mean = float(np.mean(list(within_results.values())))
+            cross_mean = float(np.mean(list(cross_results.values())))
+
+            all_results.append((n_comp, lam, within_mean, cross_mean))
+
+            # track best within
+            if within_mean > best_within_mean:
+                best_within_mean = within_mean
+                best_within = within_results
+                best_within_params = (n_comp, lam)
+
+            # track best cross
+            if cross_mean > best_cross_mean:
+                best_cross_mean = cross_mean
+                best_cross = cross_results
+                best_cross_params = (n_comp, lam)
+
+    # ---- Save BEST results ----
+    best_n_comp, best_lam = best_within_params
     save_results(
-        "reports/baseline_CSP_rLDA/within_results.txt",
-        "CSP + rLDA Baseline (WITHIN-subject)",
-        within_results
+        "reports/baseline_CSP_rLDA/best_within_results.txt",
+        f"CSP + rLDA BEST WITHIN (n_components={best_n_comp}, lam={best_lam})",
+        best_within
     )
 
+    best_n_comp, best_lam = best_cross_params
     save_results(
-        "reports/baseline_CSP_rLDA/cross_results.txt",
-        "CSP + rLDA Baseline (CROSS-subject LOSO)",
-        cross_results
+        "reports/baseline_CSP_rLDA/best_cross_results.txt",
+        f"CSP + rLDA BEST CROSS (n_components={best_n_comp}, lam={best_lam})",
+        best_cross
     )
+
+    # ---- Save summary table of all combos ----
+    summary_path = "reports/baseline_CSP_rLDA/grid_summary.txt"
+    Path("reports/baseline_CSP_rLDA").mkdir(parents=True, exist_ok=True)
+
+    with open(summary_path, "w") as f:
+        f.write("Grid search summary: CSP + rLDA\n")
+        f.write("n_components\tlam\twithin_mean\tcross_mean\n")
+        for n_comp, lam, wmean, cmean in all_results:
+            f.write(f"{n_comp}\t{lam}\t{wmean:.4f}\t{cmean:.4f}\n")
+
+        f.write("\n")
+        f.write(f"BEST WITHIN: n_components={best_within_params[0]}, lam={best_within_params[1]}, mean={best_within_mean:.4f}\n")
+        f.write(f"BEST CROSS : n_components={best_cross_params[0]}, lam={best_cross_params[1]}, mean={best_cross_mean:.4f}\n")
+
+    print(f"\nSaved grid summary to: {summary_path}")
