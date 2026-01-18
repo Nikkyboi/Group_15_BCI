@@ -9,6 +9,11 @@ manual_test/
 # Mac OS-specific storage files
 .DS_Store
 
+# Don't push data
+*/data/
+*/Group_15/data/
+
+
 # vim
 *.swp
 *.swo
