@@ -53,7 +53,7 @@ def train_one_model(model, train_loader, val_loader, device, epochs=200, lr=1e-3
     )
     # added class weights to handle class imbalance
     #weights = torch.tensor([1.0, 1.3], device=device)
-    loss_fn = torch.nn.CrossEntropyLoss(weight=weights)
+    loss_fn = torch.nn.CrossEntropyLoss()
 
     best_val = 0.0
     best_state = None

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np 
 import torch
 from .data import MI_EEG_Dataset
+from scipy.signal import welch
 
 def EEG_data_visualize(subject = "PAT013_processed", trial_idx = 493):
     dataset = MI_EEG_Dataset(subject=subject)
@@ -50,6 +51,61 @@ def EEG_data_visualize(subject = "PAT013_processed", trial_idx = 493):
     plt.tight_layout()
     plt.show()
 
+def visualize_frequency_spectrum(subject="PAT013", trial_idx=493, fmax=60):
+    dataset = MI_EEG_Dataset(subject=subject)
+
+    print("sampling frequency:", dataset.fs)
+
+    x, y = dataset[trial_idx]   # x: (T,C)
+    fs = dataset.fs
+
+    # numpy
+    X = x.detach().cpu().numpy()
+    label = int(y.detach().cpu().item())
+
+    n_samples, n_ch = X.shape
+
+    # Welch PSD per channel
+    nperseg = min(n_samples, int(fs * 2))  # ~2 second window
+    f, Pxx = welch(X, fs=fs, axis=0, nperseg=nperseg)  # Pxx: (F,C)
+
+    # keep only up to fmax Hz
+    mask = f <= fmax
+    f = f[mask]
+    Pxx = Pxx[mask, :]
+
+    # log-scale PSD (more readable)
+    Pxx_log = np.log10(Pxx + 1e-12)
+
+    # Channel labels
+    ch_names = [f"Channel {i+1}" for i in range(n_ch)]
+
+    # Auto spacing like your time plot
+    spacing = 3.0 * np.median(np.std(Pxx_log, axis=0))
+    if not np.isfinite(spacing) or spacing == 0:
+        spacing = 1.0
+
+    baselines = spacing * np.arange(n_ch)[::-1]
+
+    # Plot
+    plt.figure(figsize=(12, 6))
+
+    for ch in range(n_ch):
+        plt.plot(f, Pxx_log[:, ch] + baselines[ch], linewidth=0.8)
+
+    plt.yticks(baselines, ch_names)
+    plt.xlabel("Frequency (Hz)")
+    plt.title(f"Subject {subject}, EEG Trial {trial_idx}, Label {label} | Welch PSD ({n_ch} channels)")
+    plt.grid(True, axis="x", linestyle="--", linewidth=0.5, alpha=0.4)
+
+    ax = plt.gca()
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
     EEG_data_visualize()
+    #visualize_frequency_spectrum()

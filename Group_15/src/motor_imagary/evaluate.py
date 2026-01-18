@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 from .model import ciac_Model
-from .train import load_all_subjects_pt, get_preds, evaluate
+from .train_cross import load_all_subjects_pt, get_preds, evaluate
 import numpy as np
 
 def test_subject(
