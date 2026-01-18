@@ -199,3 +199,5 @@ echo "*.mat" >> .gitignore
 git add .gitignore
 git commit -m "Ignore raw .mat data files"Group_15/data/Raw_data/
 *.mat
+Group_15/data/Raw_data/
+*.mat
