@@ -193,3 +193,9 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+echo "Group_15/data/Raw_data/" >> .gitignore
+echo "*.mat" >> .gitignore
+git add .gitignore
+git commit -m "Ignore raw .mat data files"Group_15/data/Raw_data/
+*.mat
