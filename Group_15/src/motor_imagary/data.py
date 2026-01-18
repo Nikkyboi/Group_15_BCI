@@ -108,13 +108,18 @@ class MI_EEG_Dataset(Dataset):
 
         return x, y
 
-    def preprocess(self, output_folder: Path, apply_bandpass: bool = True, apply_car: bool = True, apply_z_score: bool = True) -> None:
+    def preprocess(self, output_folder: Path, apply_bandpass: bool = True, apply_car: bool = True, apply_ea: bool = True, apply_z_score: bool = True) -> None:
         """Preprocess the raw data and save it to the output folder."""
         output_folder = Path(output_folder)
         output_folder.mkdir(parents=True, exist_ok=True)
         
         # Start with raw data
         X_filt = self.X.copy()
+
+        # TESTING: cropping inside the 6s MI window (e.g. keep 1s–5s)
+        #start = int(1.0 * self.fs)
+        #end   = int(5.0 * self.fs)
+        #X_filt = X_filt[:, start:end, :]
         
         # Apply bandpass filter if specified
         if apply_bandpass:
@@ -125,6 +130,9 @@ class MI_EEG_Dataset(Dataset):
         if apply_car:
             X_filt = X_filt - X_filt.mean(axis=2, keepdims=True)
 
+        if apply_ea:
+            X_filt = ea_align_subject(X_filt)
+        
         # Apply z-score normalization per channel
         if apply_z_score:
             mean = X_filt.mean(axis=1, keepdims=True)  # mean over time
@@ -141,6 +149,25 @@ class MI_EEG_Dataset(Dataset):
             },
             save_path
         )
+        
+# Euclidean Alignment
+def ea_align_subject(X):
+    # X: (N, T, C)
+    # compute mean covariance across trials
+    C = []
+    for i in range(X.shape[0]):
+        Xi = X[i]  # (T,C)
+        Ci = np.cov(Xi.T)  # (C,C)
+        C.append(Ci)
+    R = np.mean(C, axis=0)
+
+    # R^{-1/2}
+    eigvals, eigvecs = np.linalg.eigh(R)
+    D_inv_sqrt = np.diag(1.0 / np.sqrt(eigvals + 1e-8))
+    R_inv_sqrt = eigvecs @ D_inv_sqrt @ eigvecs.T
+
+    # apply to all trials: (T,C) -> (T,C)
+    return np.einsum("ij,ntj->nti", R_inv_sqrt, X)
 
 def find_best_bandpass_for_all_subjects(data_path: Path = Path("data/Raw_Data"), 
     subjects: list[str] | None = None,
@@ -309,8 +336,12 @@ def log_bandpower(X, fs, band):
 
 def preprocess(subject: str = "PAT013") -> None:
     print("Preprocessing data...")
-    dataset = MI_EEG_Dataset(subject=subject)
-    dataset.preprocess(output_folder=Path("data/Processed"), apply_bandpass=True, apply_car=True, apply_z_score=True)
+    subjects = [
+        "PAT013", "PAT015", "PAT021_A", "PATID15", "PATID16", "PATID26"
+    ]
+    for subject in subjects:
+        dataset = MI_EEG_Dataset(subject=subject)
+        dataset.preprocess(output_folder=Path("data/Processed"), apply_bandpass=True, apply_car=True, apply_ea=True, apply_z_score=True)
     #find_best_bandpass_for_all_subjects(
     #    data_path=Path("data/Raw_Data"),
     #    subjects=[

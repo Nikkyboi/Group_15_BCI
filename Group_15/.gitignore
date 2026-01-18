@@ -13,6 +13,16 @@ manual_test/
 */data/
 */Group_15/data/
 
+# reports
+reports/
+
+# models
+models/
+
+# processed data
+data/Processed/
+# raw data
+data/Raw_Data/
 
 # vim
 *.swp

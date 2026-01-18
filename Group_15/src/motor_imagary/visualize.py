@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from .data import MI_EEG_Dataset
 
-def EEG_data_visualize(subject = "PAT013", trial_idx = 493):
+def EEG_data_visualize(subject = "PAT013_processed", trial_idx = 493):
     dataset = MI_EEG_Dataset(subject=subject)
 
     x, y = dataset[trial_idx]   # x: torch tensor, y: torch scalar
