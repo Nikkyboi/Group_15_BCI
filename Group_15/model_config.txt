@@ -1,0 +1,20 @@
+1st model had every feature selected:
+- apply_bandpass=True
+- apply_car=True
+- apply_z_score=True
+
+2nd can't remember
+
+3rd closer to paper: 59%
+- apply_bandpass=False
+- apply_car=True
+- apply_ea=False
+- apply_z_score=True
+
+EA did not improve cross-subject but did subwhat improve within
+
+4th model will try to add class weight for more balance:
+weights = torch.tensor([1.0, 1.3], device=device)
+loss_fn = torch.nn.CrossEntropyLoss(weight=weights)
+
+also use shorter windows. Full trial is 6 sec, so centered in the middle 1-5 sec 52%
