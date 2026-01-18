@@ -341,7 +341,7 @@ def preprocess(subject: str = "PAT013") -> None:
     ]
     for subject in subjects:
         dataset = MI_EEG_Dataset(subject=subject)
-        dataset.preprocess(output_folder=Path("data/Processed"), apply_bandpass=True, apply_car=True, apply_ea=True, apply_z_score=True)
+        dataset.preprocess(output_folder=Path("data/Processed"), apply_bandpass=False, apply_car=True, apply_ea=False, apply_z_score=True)
     #find_best_bandpass_for_all_subjects(
     #    data_path=Path("data/Raw_Data"),
     #    subjects=[
