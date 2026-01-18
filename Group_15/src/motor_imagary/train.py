@@ -51,7 +51,9 @@ def train_one_model(model, train_loader, val_loader, device, epochs=200, lr=1e-3
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     opt, mode="min", factor=0.5, patience=10, verbose=True
     )
-    loss_fn = torch.nn.CrossEntropyLoss()
+    # added class weights to handle class imbalance
+    #weights = torch.tensor([1.0, 1.3], device=device)
+    loss_fn = torch.nn.CrossEntropyLoss(weight=weights)
 
     best_val = 0.0
     best_state = None
@@ -216,7 +218,7 @@ if __name__ == "__main__":
     test_loader  = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
     # Model path
-    model_name = "ciacnet_v3"
+    model_name = "ciacnet_v5"
     Path("models").mkdir(parents=True, exist_ok=True)
     model_path = Path("models") / f"global_test_{held_out_name}_{model_name}.pth"
 

@@ -9,7 +9,7 @@ import numpy as np
 
 def test_subject(
     held_out: int,
-    model_name: str = "ciacnet_v3",
+    model_name: str = "ciacnet_v5",
     processed_dir: Path = Path("data/Processed"),
     models_dir: Path = Path("models"),
     reports_dir: Path = Path("reports"),
