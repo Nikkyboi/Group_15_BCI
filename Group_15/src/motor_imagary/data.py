@@ -30,8 +30,8 @@ class MI_EEG_Dataset(Dataset):
 
     def __init__(
         self,
-        subject: str = "PAT013",
-        raw_path: Path = Path("data/Raw_Data"),
+        subject: str = "PAT021_A_processed",
+        raw_path: Path = Path("data/Raw_data"),
         processed_path: Path = Path("data/Processed")
     ):
         """
@@ -194,7 +194,7 @@ def preprocess(subject: str = "PAT013") -> None:
     ]
     for subject in subjects:
         dataset = MI_EEG_Dataset(subject=subject)
-        dataset.preprocess(output_folder=Path("data/Processed"), apply_bandpass=True, apply_car=True, apply_ea=True, apply_z_score=False)
+        dataset.preprocess(output_folder=Path("data/Processed"), apply_bandpass=True, apply_car=True, apply_ea=False, apply_z_score=False)
 
 if __name__ == "__main__":
     typer.run(preprocess)

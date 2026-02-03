@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from .CSP import fit_csp, csp_logvar_features
+from .FBCSP import FBCSP
 from .rLDA import rLDA
 from .data import MI_EEG_Dataset
 
@@ -46,7 +46,7 @@ def baseline_within(subjects, test_size = 0.2, n_components = 4, lam = 0.1):
     results = {}
     for subj in subjects:
         # Load data
-        data = MI_EEG_Dataset(subject=subj)
+        data = MI_EEG_Dataset(subject=subj, processed_path=Path("data/Processed_w_EA"))
         
         # Prepare data
         X = data.X.astype(np.float64)      # (N, T, C)
@@ -59,11 +59,11 @@ def baseline_within(subjects, test_size = 0.2, n_components = 4, lam = 0.1):
         )
         
         # CSP (fit on train only)
-        W = fit_csp(X_train, y_train, n_components=n_components)
+        fbcsp = FBCSP(fs=data.fs, n_components=n_components)
         
         # CSP features
-        F_train = csp_logvar_features(X_train, W)
-        F_test  = csp_logvar_features(X_test, W)
+        F_train = fbcsp.fit_transform(X_train, y_train)
+        F_test  = fbcsp.transform(X_test)
         
         # rLDA
         clf = rLDA(lam=lam)
@@ -95,7 +95,7 @@ def baseline_cross(subjects, n_components = 4, lam = 0.1):
     all_y = {}
     
     for subj in subjects:
-        data = MI_EEG_Dataset(subject=subj)
+        data = MI_EEG_Dataset(subject=subj, processed_path=Path("data/Processed_w_EA"))
         X = data.X.astype(np.float64)  # (N, T, C)
         y = data.y.astype(int)        # (N,)
 
@@ -113,11 +113,11 @@ def baseline_cross(subjects, n_components = 4, lam = 0.1):
         y_train = np.concatenate([all_y[s] for s in subjects if s != test_subj], axis=0)
         
         # CSP (fit on TRAIN subjects only)
-        W = fit_csp(X_train, y_train, n_components=n_components)
+        fbcsp = FBCSP(fs=data.fs, n_components=n_components)
         
         # CSP features
-        F_train = csp_logvar_features(X_train, W)
-        F_test  = csp_logvar_features(X_test, W)
+        F_train = fbcsp.fit_transform(X_train, y_train)
+        F_test  = fbcsp.transform(X_test)
         
         # rLDA
         clf = rLDA(lam=lam)
@@ -134,64 +134,39 @@ def baseline_cross(subjects, n_components = 4, lam = 0.1):
     return results
         
 if __name__ == "__main__":
+    
+    EA = False
+    
     subjects = [
         "PAT013_processed", "PAT015_processed", "PAT021_A_processed",
         "PATID15_processed", "PATID16_processed", "PATID26_processed"
     ]
+    
+    n_comp_within = 6
+    lam_within = 0.01
 
-    n_components_list = [2, 4, 6, 8]
-    lam_list = [0.01, 0.05, 0.1, 0.2]
+    n_comp_cross = 4
+    lam_cross = 0.05
 
-    best_within_mean = -1.0
-    best_cross_mean = -1.0
-
-    best_within_results = None
-    best_cross_results = None
-
-    best_within_params = None  # (n_comp, lam)
-    best_cross_params = None   # (n_comp, lam)
-
-    grid_summary = []  # store (n_comp, lam, within_mean, cross_mean)
-
-    for n_comp in n_components_list:
-        for lam in lam_list:
-            print(f"\n=== n_components={n_comp}, lam={lam} ===")
-
-            within_results = baseline_within(
-                subjects, test_size=0.2, n_components=n_comp, lam=lam
-            )
-            cross_results = baseline_cross(
-                subjects, n_components=n_comp, lam=lam
-            )
-
-            within_mean = float(np.mean(list(within_results.values())))
-            cross_mean = float(np.mean(list(cross_results.values())))
-
-            grid_summary.append((n_comp, lam, within_mean, cross_mean))
-
-            # Update best WITHIN
-            if within_mean > best_within_mean:
-                best_within_mean = within_mean
-                best_within_results = within_results
-                best_within_params = (n_comp, lam)
-
-            # Update best CROSS
-            if cross_mean > best_cross_mean:
-                best_cross_mean = cross_mean
-                best_cross_results = cross_results
-                best_cross_params = (n_comp, lam)
-
-    # ---- Save BEST results ----
-    n_comp, lam = best_within_params
-    save_results(
-        "reports/baseline_CSP_rLDA/best_within_results.txt",
-        f"CSP + rLDA BEST WITHIN (n_components={n_comp}, lam={lam})",
-        best_within_results
+    within_results = baseline_within(
+        subjects, test_size=0.2, n_components=n_comp_within, lam=lam_within
+    )
+    cross_results = baseline_cross(
+        subjects, n_components=n_comp_cross, lam=lam_cross
     )
 
-    n_comp, lam = best_cross_params
+    within_mean = float(np.mean(list(within_results.values())))
+    cross_mean = float(np.mean(list(cross_results.values())))
+
+    # ---- Save BEST results ----
     save_results(
-        "reports/baseline_CSP_rLDA/best_cross_results.txt",
-        f"CSP + rLDA BEST CROSS (n_components={n_comp}, lam={lam})",
-        best_cross_results
+        "reports/FBCSP_rLDA_w_bp_w_ea/best_within_results.txt",
+        f"FBCSP + rLDA BEST WITHIN (n_components={n_comp_within}, lam={lam_within})",
+        within_results
+    )
+    
+    save_results(
+        "reports/FBCSP_rLDA_w_bp_w_ea/best_cross_results.txt",
+        f"FBCSP + rLDA BEST CROSS (n_components={n_comp_cross}, lam={lam_cross})",
+        cross_results
     )

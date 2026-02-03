@@ -1,4 +1,3 @@
-
 import numpy as np
 
 def cov_trace_normalized(X_trial):
@@ -81,7 +80,6 @@ def fit_csp(X_train, y_train, n_components=4):
     W = select_csp_filters(W_full, n_components=n_components)
     return W
 
-
 if __name__ == "__main__":
     """
     CSP = Common Spatial Patterns
@@ -100,6 +98,4 @@ if __name__ == "__main__":
     6. Feature extraction (log-variance of filtered signals)
     
     """
-    
-    
     pass

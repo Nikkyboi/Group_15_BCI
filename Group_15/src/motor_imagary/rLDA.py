@@ -25,7 +25,7 @@ class rLDA:
         S0 = np.cov(X0, rowvar=False, bias=True)
         S1 = np.cov(X1, rowvar=False, bias=True)
         S = 0.5 * (S0 + S1)
-
+        
         D = S.shape[0]
         S_reg = (1.0 - self.lam) * S + self.lam * np.eye(D)
 
